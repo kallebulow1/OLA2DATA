@@ -1,0 +1,20 @@
+forv1størreforbgoder <- read_excel("data/forv1_størreforbrugsgoder.xlsx")
+
+forv1størreforbgoder_kvt <- forv1størreforbgoder %>%
+  # Træk år og måned ud fra "kvartal" (fx 2010M01 → 2010 og 01)
+  mutate(
+    aar  = as.integer(str_sub(kvartal, 1, 4)),
+    maan = as.integer(str_sub(kvartal, 6, 7)),
+    kvartal = paste0(aar, "K", ceiling(maan / 3))  # laver Q1..Q4
+  ) %>%
+  group_by(kvartal) %>%
+  summarise(
+    forv1størreforbgoder_mean = mean(anskaf_større_forbgoder, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+data.frame(
+  periode = "2000K1–2024K3",
+  gennemsnit = mean(forv1størreforbgoder_kvt$forv1størreforbgoder_mean, na.rm = TRUE)
+)
