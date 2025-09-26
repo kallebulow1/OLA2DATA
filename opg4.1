@@ -1,0 +1,36 @@
+library(readxl)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+
+forv1 <- read_excel("data/forv1.xlsx")
+
+forv1_kvt <- forv1 %>%
+  # Træk år og måned ud fra "kvartal" (fx 2010M01 → 2010 og 01)
+  mutate(
+    aar  = as.integer(str_sub(kvartal, 1, 4)),
+    maan = as.integer(str_sub(kvartal, 6, 7)),
+    kvartal = paste0(aar, "K", ceiling(maan / 3))  # laver Q1..Q4
+  ) %>%
+  group_by(kvartal) %>%
+  summarise(
+    forv1_mean = mean(Forbrugertillidsindikatoren, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(forv1_kvt, aes(x = kvartal, y = forv1_mean, group = 1)) +
+  geom_line() +
+  geom_hline(yintercept = 0) +
+  scale_x_discrete(
+    breaks = forv1_kvt$kvartal[
+      grepl("K1$", forv1_kvt$kvartal) & as.integer(substr(forv1_kvt$kvartal, 1, 4)) %% 2 == 0
+    ], 
+    labels = sub("K.*", "", forv1_kvt$kvartal[
+      grepl("K1$", forv1_kvt$kvartal) & as.integer(substr(forv1_kvt$kvartal, 1, 4)) %% 2 == 0
+    ])
+  ) +
+  labs(
+    title = "DSTs Forbrugertillidsindikator, 1996–2025",
+    x = "År",  # <- bedre x-akse titel
+    y = "Forbrugertillidsindikator"
+  )
