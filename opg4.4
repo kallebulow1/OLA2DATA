@@ -1,0 +1,63 @@
+forbtillidDI <- read_excel("data/forbtillidDI.xlsx")
+
+forbtillidDI <- forbtillidDI %>%
+  rowwise() %>%
+  mutate(
+    gennemsnit = mean(c_across(
+      `Familiens økonomiske situation i dag, sammenlignet med for et år siden`:
+        `Anskaffelse af større forbrugsgoder, inden for de næste 12 mdr.`
+    ), na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+library(stringr)
+
+forbtillidDI_kvt <- forbtillidDI %>%
+  # Træk år og måned ud fra "år.måned" (fx 2010M01 → 2010 og 01)
+  mutate(
+    aar  = as.integer(str_sub(kvartal, 1, 4)),
+    maan = as.integer(str_sub(kvartal, 6, 7)),
+    kvartal = paste0(aar, "K", (maan + 2) %/% 3)  # laver Q1..Q4
+  ) %>%
+  group_by(kvartal) %>%
+  summarise(
+    forbtillidDI_mean = mean(gennemsnit, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+library(dplyr)
+library(purrr)
+library(broom)
+
+# Merge alle data på kvartal
+regdata <- nkhc021 %>%
+  inner_join(forv1_kvt, by = "kvartal") %>%
+  inner_join(forbtillidDI_kvt, by = "kvartal") %>%
+  filter(kvartal >= "2000K1", kvartal <= "2024K2")
+
+# Navnene på de 11 forbrugsgrupper (alle kolonner undtagen kvartal, forv1_mean, forbtillidDI_mean)
+forbrugsgrupper <- setdiff(names(regdata), c("kvartal","forv1_mean","forbtillidDI_mean"))
+
+
+# 11 regressioner mod DST (forv1_mean)
+reg_dst <- map(set_names(forbrugsgrupper), ~
+                 lm(reformulate("forv1_mean", response = .x), data = regdata) |> summary()
+)
+
+# 11 regressioner mod DI (forbtillidDI_mean)
+reg_di <- map(set_names(forbrugsgrupper), ~
+                lm(reformulate("forbtillidDI_mean", response = .x), data = regdata) |> summary()
+)
+
+
+# samlet liste med 22 summaries
+reg_all <- list(dst = reg_dst, di = reg_di)
+
+
+# Eksempel: summary af den første regression mod DST
+reg_all$dst[[1]]
+
+reg_all$dst[["Fødevarer mv."]]   # summary for 'Fødevarer mv.' ~ forv1_mean
+reg_all$di[["Fødevarer mv."]]    # summary for 'Fødevarer mv.' ~ forbtillidDI_mean
+
