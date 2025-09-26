@@ -1,0 +1,27 @@
+nkhc021 <- read_excel("data/nkhc021husholdforb.xlsx")
+
+library(dplyr)
+library(tidyr)
+
+nkhc021 %>%
+  filter(substr(kvartal, 1, 4) == "2023") %>%
+  select(-kvartal) %>%
+  summarise(across(everything(), \(x) mean(x, na.rm = TRUE))) %>%
+  pivot_longer(cols = everything(),
+               names_to = "gruppe", values_to = "værdi") %>%
+  arrange(desc(værdi)) %>%
+  slice(1)
+
+  vinder_2020_2023 <- nkhc021 %>%
+  mutate(aar = substr(kvartal, 1, 4)) %>%              # udtræk år
+  filter(aar %in% c("2020", "2023")) %>%               # behold 2020 og 2023
+  select(-kvartal) %>%                                 # fjern kvartalskolonnen
+  group_by(aar) %>%
+  summarise(across(everything(), \(x) mean(x, na.rm = TRUE)), .groups = "drop") %>%  # års-gennemsnit
+  pivot_longer(-aar, names_to = "gruppe", values_to = "vaerdi") %>%
+  pivot_wider(names_from = aar, values_from = vaerdi) %>%
+  mutate(stigning_2020_2023 = `2023` - `2020`) %>%
+  arrange(desc(stigning_2020_2023)) %>%
+  slice(1)                                            # øverste = størst stigning
+
+vinder_2020_2023
