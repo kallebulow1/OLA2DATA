@@ -1,0 +1,10 @@
+library(ggplot2)
+
+ggplot(boligdata_merge, aes(x = bykategori, y = kvadratmeterpris, fill = bykategori)) +
+  stat_summary(fun = mean, geom = "bar") +
+  labs(title = "Gennemsnitlig kvadratmeterpris efter bykategori",
+       x = "Bytype",
+       y = "Kvadratmeterpris (kr.)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
