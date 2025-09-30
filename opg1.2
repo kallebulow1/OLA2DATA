@@ -1,0 +1,27 @@
+# Summér value for hver OMRÅDE (alle køn lagt sammen)
+by_tot <- aggregate(value ~ OMRÅDE + TID, data = my_data, sum)
+# Definér kategorigrænser
+bycat <- c("landsby"       = 250,
+           "lille by"      = 1000,
+           "almindelig by" = 2500,
+           "større by"     = 10000,
+           "storby"        = 50000)
+
+# Lav breaks (inkl. Inf for de største byer)
+breaks <- c(0, bycat, Inf)
+
+# Labels skal matche intervallerne (dvs. navne på bycat + ekstra label til Inf)
+labels <- c(names(bycat), "meget stor by")
+
+# Tilføj bykategori i datasættet
+by_tot$bykategori <- cut(by_tot$value,
+                         breaks = breaks,
+                         labels = labels,
+                         right  = FALSE)
+
+# Se resultat
+head(by_tot)
+
+# Tjek resultatet
+head(by_tot, 15)
+table(by_tot$bykategori)
