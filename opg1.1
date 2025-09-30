@@ -1,0 +1,19 @@
+# 1. Indlæs pakken
+library(dkstat)
+
+alltabs <- dst_get_tables(lang = "da")
+
+find_tab <- dst_search(string = "befolkning", field = "text")
+
+BEV107_meta <- dst_meta("BEV107")
+
+BEV107_meta$basics
+
+my_query <- list(
+  OMRÅDE = "*",
+  BEVÆGELSE = "Befolkningen ultimo indeværende år",
+  KØN = "*",
+  Tid = "2024"
+  
+)
+my_data <- (dst_get_data(table = "BEV107", query = my_query, lang = "da"))
