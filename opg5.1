@@ -1,0 +1,47 @@
+library(eurostat)
+library(dplyr)
+library(ggplot2)
+library(restatapi)
+
+
+library(eurostat)
+library(dplyr)
+library(ggplot2)
+
+library(eurostat)
+library(dplyr)
+library(ggplot2)
+
+library(eurostat)
+library(eurostat)
+
+library(eurostat)
+library(dplyr)
+
+library(eurostat)
+library(dplyr)
+
+# Hent kvartalsdata
+cons_q <- get_eurostat("namq_10_fcs", time_format = "num")
+lande <- c("DK","BE","NL","SE","AT","DE","FR","IT","ES")
+
+cons_real <- cons_q %>%
+  filter(geo %in% lande,
+         unit == "CP_MEUR",
+         s_adj == "SCA",
+         na_item == "P31_S14",
+         TIME_PERIOD >= 1999 & TIME_PERIOD <= 2024.5) %>%
+  arrange(geo, TIME_PERIOD)
+
+
+
+
+
+
+cons_growth <- cons_real %>%
+  group_by(geo) %>%
+  mutate(
+    yoy_growth = (values / lag(values, 4) - 1) * 100
+  ) %>%
+  ungroup()
+cons_growth <- cons_growth[-c(1:4), ]
