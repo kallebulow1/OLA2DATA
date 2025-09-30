@@ -1,0 +1,90 @@
+# Indlæs boligdata
+boliger <- read("boliger.csv", sep = ";", stringsAsFactors = FALSE)
+boliger <- readRDS("data/boligcl2.rds")
+
+# Tjek variablerne
+head(boliger)
+head(by_tot)
+
+# Sørg for at variabelnavnene matcher (her: "by")
+# Hvis OMRÅDE i by_tot skal matche "by" i boliger:
+colnames(by_tot)[colnames(by_tot) == "OMRÅDE"] <- "by"
+
+# Merge datasættene
+boligdata_merge <- merge(boliger, by_tot[, c("by", "bykategori")],
+                         by = "by",
+                         all.x = TRUE)
+
+# Se resultatet
+head(boligdata_merge)
+
+
+...
+#fjern tal
+by_tot$by <- gsub("[0-9]", "", by_tot$by)
+by_tot$by <- trimws(by_tot$by)
+
+
+# Lav zipmunic til små bogstaver
+boliger$zipmunic <- tolower(boliger$zipmunic)
+
+# Fjern mellemrum i starten/slutningen
+boliger$zipmunic <- trimws(boliger$zipmunic)
+
+# Erstat skrivemåder uden æøå
+boliger$zipmunic <- gsub("ae", "æ", boliger$zipmunic)
+boliger$zipmunic <- gsub("oe", "ø", boliger$zipmunic)
+boliger$zipmunic <- gsub("aa", "å", boliger$zipmunic)
+
+# Første bogstav stort
+boliger$zipmunic <- paste0(toupper(substring(boliger$zipmunic, 1, 1)),
+                           substring(boliger$zipmunic, 2))
+# Tjek nogle eksempler
+unique(boliger$zipmunic)[1:30]
+
+#kvmpris
+# Lav ny numerisk pris-kolonne (fjerner punktummer og " kr.")
+boliger$pris_num <- as.numeric(gsub("[^0-9]", "", boliger$pris))
+
+# Beregn kvadratmeterpris: pris / areal
+boliger$kvadratmeterpris <- boliger$pris_num / boliger$kvm2
+
+# Tjek resultat
+head(boliger[, c("pris", "areal", "kvadratmeterpris")])
+
+# Afrund til hele kroner
+boliger$kvadratmeterpris <- round(boliger$kvadratmeterpris, 0)
+
+# Behold kun fx zipmunic, mzip og alder
+boliger <- boliger[, c("pris", "zipmunic", "kvadratmeterpris")]
+
+by_tot <- by_tot[, c("by", "bykategori")]
+
+
+boligdata_merge <- merge(
+  boliger, 
+  by_tot,
+  by.x = "zipmunic", 
+  by.y = "by",
+  all = FALSE   # kun fælles byer beholdes
+)
+
+
+library(ggplot2)
+
+ggplot(boligdata_merge, aes(x = bykategori, y = kvadratmeterpris, fill = bykategori)) +
+  stat_summary(fun = mean, geom = "bar") +
+  labs(title = "Gennemsnitlig kvadratmeterpris efter bykategori",
+       x = "Bytype",
+       y = "Kvadratmeterpris (kr.)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+
+
+
+
+
+
+
+
