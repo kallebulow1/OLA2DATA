@@ -1,0 +1,30 @@
+
+# Nyt datasæt uden coronaperioden
+cons_real_nocorona <- cons_real %>%
+  filter(TIME_PERIOD >= 1999.00, TIME_PERIOD <= 2024.25,
+         !(TIME_PERIOD >= 2020.00 & TIME_PERIOD <= 2022.00))
+
+#lav realvækst for det nye datasæt
+cons_real_nocorona <- cons_real_nocorona %>%
+  group_by(geo) %>%
+  arrange(TIME_PERIOD) %>%
+  mutate(yoy_growth = (values / lag(values, 4) - 1) * 100) %>%
+  ungroup()
+
+#slet rækker med 1999
+cons_real_nocorona <- cons_real_nocorona %>%
+  filter(TIME_PERIOD > 1999.75)
+
+# Find gennemsnitlig vækst pr. land i hele perioden
+realvækst_gns_nocorona <- cons_real_nocorona %>%
+  group_by(geo) %>%
+  summarise(mean_growth_nocorona = mean(yoy_growth, na.rm = TRUE)) %>%
+  arrange(desc(mean_growth_nocorona))
+
+
+#  Sammenlign forskellen
+corona_effect <- result %>%
+  inner_join(realvækst_gns_nocorona, by = "geo") %>%
+  mutate(effect = mean_growth - mean_growth_nocorona,
+         effect_abs = abs(effect)) %>%
+  arrange(desc(effect_abs))
