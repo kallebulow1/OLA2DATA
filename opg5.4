@@ -1,0 +1,38 @@
+alle_lande <- cons_q %>%
+  filter(
+         unit == "CP_MEUR",
+         s_adj == "SCA",
+         na_item == "P31_S14",
+         TIME_PERIOD >= 1999 & TIME_PERIOD <= 2024.5) %>%
+  arrange(geo, TIME_PERIOD)
+
+library(dplyr)
+
+alle_lande <- alle_lande %>%
+  group_by(geo) %>%                  # beregn separat pr. land
+  arrange(TIME_PERIOD) %>%           # sørg for at rækkerne står i rækkefølge
+  mutate(yoy_growth = (values / lag(values, 4) - 1) * 100) %>%
+  ungroup()
+
+#slet rækker med 1999
+alle_lande <- alle_lande %>%
+  filter(TIME_PERIOD > 1999.75)
+
+# Tæl hvor mange NA'er der er i hele datasættet
+sum(is.na(alle_lande))
+
+# Find de rækker hvor yoy_growth er NA
+alle_lande %>% filter(is.na(yoy_growth))
+
+
+library(dplyr)
+
+# Filtrér perioden 2020Q1 til 2024Q2, fjern NA, beregn gennemsnit
+alle_lande2 <- alle_lande %>%
+  filter(TIME_PERIOD >= 2020.00, TIME_PERIOD <= 2024.25) %>%
+  filter(!is.na(yoy_growth)) %>%
+  filter(!grepl("EA12", geo), !grepl("EA19", geo), !grepl("EA20", geo), !grepl("EA", geo), !grepl("EU27_2020", geo)) %>%
+  group_by(geo) %>%
+  summarise(mean_growth_alle_lande = mean(yoy_growth, na.rm = TRUE)) %>%
+  arrange(mean_growth_alle_lande)
+
