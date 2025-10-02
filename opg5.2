@@ -2,7 +2,7 @@ library(dplyr)
 
 # Filtrer perioden 2000 Q1 - 2024 Q2
 result <- cons_growth %>%
-  filter(TIME_PERIOD >= 2000.00, TIME_PERIOD <= 2024.50) %>%
+  filter(TIME_PERIOD >= 2000.00, TIME_PERIOD <= 2024.25) %>%
   group_by(geo) %>%
   summarise(mean_growth = mean(yoy_growth, na.rm = TRUE)) %>%
   arrange(desc(mean_growth))
