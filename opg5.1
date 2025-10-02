@@ -34,14 +34,18 @@ cons_real <- cons_q %>%
   arrange(geo, TIME_PERIOD)
 
 
-
-
-
-
+#laver ny kolonne med realvækst, sammenlign med samme kvartal året før, er vi steget eller faldet
 cons_growth <- cons_real %>%
   group_by(geo) %>%
   mutate(
     yoy_growth = (values / lag(values, 4) - 1) * 100
   ) %>%
   ungroup()
+
+
+#slet de første fire linjer
 cons_growth <- cons_growth[-c(1:4), ]
+
+cons_growth <- cons_growth[!is.na(cons_growth$yoy_growth), ]
+
+
