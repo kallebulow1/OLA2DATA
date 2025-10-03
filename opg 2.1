@@ -170,3 +170,36 @@ final_2016_v_2023 <- final_2016_v_2023 %>%
   labs(title = "DI’s forbrugertillidsindikator følger årlig realvækst tættere end DST’s indikator", x = "rød = DST, sort = DI")+
   scale_x_discrete(breaks = final_df_1$Kvartal[seq(1, length(final_df_1$Kvartal), by = 4)]) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+  ggplot(final_df_1, aes(x = Kvartal)) +
+  # søjler: årlig realvækst i privatforbrug
+  geom_col(aes(y = vkst_pc), fill = "lightblue", alpha = 0.65) +
+  
+  # linjer: DST og DI (vigtigt: group = 1)
+  geom_line(aes(y = DST, colour = "DST", group = 1), size = 1.1) +
+  geom_line(aes(y = DI,  colour = "DI",  group = 1), size = 1.1) +
+  
+  # nul-linje
+  geom_hline(yintercept = 0, colour = "grey", linetype = "dashed") +
+  
+  # labels
+  labs(
+    title   = "Forbrugertillid peger fremad: DI følger realvæksten tættest",
+    x       = "Kvartal",
+    y       = "Årlig realvækst i privatforbrug (%)",
+    colour  = "Indikator",
+    caption = "Kilde: Danmarks Statistik, Dansk Industri og egne beregninger"
+  ) +
+  
+  # farver og tynd x-akse
+  scale_colour_manual(values = c("DST" = "red", "DI" = "black")) +
+  scale_x_discrete(breaks = final_df_1$Kvartal[seq(1, nrow(final_df_1), by = 8)]) +
+  
+  # pænere tema
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title   = element_text(face = "bold", size = 15),
+    axis.text.x  = element_text(angle = 45, hjust = 1, size = 9),
+    legend.position = "bottom",
+    legend.title    = element_text(face = "bold")
+  )
