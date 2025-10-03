@@ -1,0 +1,36 @@
+matrx_DI  <- glm(Direction ~ DI_FTI, data = ny_data)
+matrx_DST <- glm(Direction ~ DST_FTI, data = ny_data)
+
+summary(matrx_DI)
+
+
+pred_DST <- predict(matrx_DST, newdata = ny_data)
+pred_DST_dir <- ifelse(pred_DST > 0, 1, 0)
+
+table(Predicted = pred_DST_dir, Actual = df_q$direction)
+
+
+pred_DI <- predict(matrx_DI, newdata = ny_data)
+pred_DI_dir <- ifelse(pred_DI > 0, 1, 0)
+
+table(Predicted = pred_DI_dir, Actual = df_q$direction)
+
+## 1) Logistisk model for DST
+mod_DST_log <- glm(Direction ~ DST_FTI, data = ny_data, family = binomial)
+p_DST <- predict(mod_DST_log, newdata = ny_data, type = "response")  # 0..1
+
+# 2) Gem dem i dit datasæt
+ny_data$p_DST_prob <- p_DST
+
+# 3) Hvis du også vil have 0/1 klassifikation:
+ny_data$pred_DST_dir <- ifelse(p_DST > 0.5, 1, 0)
+
+## 2) Logistisk model for DI
+mod_DI_log <- glm(Direction ~ DI_FTI, data = ny_data, family = binomial)
+p_DI <- predict(mod_DI_log, newdata = ny_data, type = "response")    # 0..1
+pred_DI_dir <- as.integer(p_DI > 0.5)
+
+## 3) Valideringsmatricer
+cm_DST <- table(Predicted = pred_DST_dir, Actual = ny_data$Direction)
+cm_DI  <- table(Predicted = pred_DI_dir,  Actual = ny_data$Direction)
+cm_DST; cm_DI
