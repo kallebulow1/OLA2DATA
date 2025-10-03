@@ -1,0 +1,4 @@
+op_ned <- ifelse(df_q$P31_yoy > 0,1,0)
+df_q$direction <- as.factor(op_ned)
+table(ny_data$Direction)
+prop.table(table(ny_data$Direction))
