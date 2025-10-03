@@ -1,0 +1,172 @@
+#Læser først datasætsne fra DS ind
+
+ftillid <- read.csv("forbrugforventning DS.csv", skip = 1, na.strings = "..")
+
+#Indlæs data privforbrug 1999
+
+privforbrug4 <- read.csv("NKH 1999 privforbrug.csv", skip = 3, sep = ",")
+
+#Clean data
+
+privforbrug3 <- privforbrug3[-c(1,2), -c(1,2,3)] #Fjerner række 1 og 2  kolonnerne 1 og 2 og 3 med -c() fordi flere kolonner
+
+
+privforbrug4 <- privforbrug4[-c(1,2), -c(1,2,3)]
+
+#Lav om til data.frame
+
+privforbrug3_df <- data.frame(Kvartal = names(privforbrug3),
+                              Værdi = as.numeric(privforbrug3[1, ]))
+
+#Beregngin af privatforbrug til årlige realvækst pr kvaratl 
+vkstp <- (diff(log(as.numeric(privforbrug4_df$Værdi)), lag=4)) * 100
+final_df$vkstp_pct <- vkstp
+
+#Ænder måned til kvartal
+
+
+## 1) forbrugertillidsindikator
+v0 <- as.numeric(ftillidv3$Forbrugertillidsindikatoren[start_idx:end_idx])
+final_df$dst_ft <- colMeans(matrix(v0,nrow = 3), na.rm = TRUE)
+
+## 1) Familiens økonomi i dag (vs. for et år siden)
+v1 <- as.numeric(ftillidv3$`Familiens økonomiske situation i dag, sammenlignet med for et år siden`[start_idx:end_idx])
+final_df$fam_i_dag2 <- colMeans(matrix(v1, nrow = 3), na.rm = TRUE)
+
+## 2) Familiens økonomi om 1 år (vs. i dag)
+v2 <- as.numeric(ftillidv3$`Familiens økonomiske situation om et år, sammenlignet med i dag`[start_idx:end_idx])
+final_df$fam_om_år2 <- colMeans(matrix(v2, nrow = 3), na.rm = TRUE)
+
+## 3) Danmarks økonomi i dag (vs. for et år siden)
+v3 <- as.numeric(ftillid$`Danmarks økonomiske situation i dag, sammenlignet med for et år siden`[start_idx:end_idx])
+final_df$danm_idag <- colMeans(matrix(v3, nrow = 3), na.rm = TRUE)
+
+## 4) Danmarks økonomi om 1 år (vs. i dag)
+v4 <- as.numeric(ftillid$`Danmarks økonomiske situation om et år, sammenlignet med i dag`[start_idx:end_idx])
+final_df$danm_om_år <- colMeans(matrix(v4, nrow = 3), na.rm = TRUE)
+
+## 5) Anskaffelse af større forbrugsgoder – fordelagtigt nu
+v5 <- as.numeric(ftillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[start_idx:end_idx])
+final_df$ansk_forbrugsgoder <- colMeans(matrix(v5, nrow = 3), na.rm = TRUE)
+
+## 5) Anskaffelse af større forbrugsgoder – fordelagtigt nu
+v5 <- as.numeric(ftillid$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[start_idx:end_idx])
+final_df$ansk_forbrugsgoder <- colMeans(matrix(v5, nrow = 3), na.rm = TRUE)
+
+## 6) Anskaffelse af større forbrugsgoder – inden for de næste 12 måneder
+v6 <- as.numeric(ftillid$`Anskaffelse af større forbrugsgoder, inden for de næste 12 mdr.`[start_idx:end_idx])
+final_df$ansk_forbrugsgoder_12 <- colMeans(matrix(v6, nrow = 3), na.rm = TRUE)
+
+
+#Ny DI 2025k3
+# udvælg de fire spørgsmål
+
+## 1) Vælg månederne til 2025K3
+m_k3 <- c("X2025M07","X2025M08","X2025M09")
+
+## 2) Kvartals-gennemsnit for de fire DI-spørgsmål
+fam_i_dag_k3 <- mean(ftillidv3$`Familiens økonomiske situation i dag, sammenlignet med for et år siden`[ftillidv3$ÅrMåned %in% m_k3], na.rm = TRUE)
+danm_idag_k3 <- mean(ftillidv3$`Danmarks økonomiske situation i dag, sammenlignet med for et år siden`[ftillidv3$ÅrMåned %in% m_k3], na.rm = TRUE)
+ansk_now_k3 <- mean(ftillidv3$`Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket`[ftillidv3$ÅrMåned %in% m_k3], na.rm = TRUE)
+ansk_12_k3  <- mean(ftillidv3$`Anskaffelse af større forbrugsgoder, inden for de næste 12 mdr.`[ftillidv3$ÅrMåned %in% m_k3], na.rm = TRUE)
+
+## 3) DI’s kvartalsindikator = gennemsnit af de fire
+di_2025K3 <- mean(c(fam_i_dag_k3, danm_idag_k3, ansk_now_k3, ansk_12_k3), na.rm = TRUE)
+
+## 4) Sæt det ind i din kvartals-DF
+final_df$DI[final_df$Kvartal == "X2025K3"] <- di_2025K3
+
+
+
+
+#Mere data exploration
+
+#Hvad for nogen spørgsmål indgår/indgår ikke?
+
+final_di_vs_df_spørgsmål <- data.frame(
+  spørgsmål = c("Familiens økonomiske situation i dag, sammenlignet med for et år siden", 
+  "Familiens økonomiske situation om et år, sammenlignet med i dag", "Danmarks økonomiske situation i dag, sammenlignet med for et år siden",
+  "Danmarks økonomiske situation om et år, sammenlignet med i dag",
+  "Anskaffelse af større forbrugsgoder, fordelagtigt for øjeblikket",
+  "Priser i dag, sammenlignet med for et år siden",
+  "Priser om et år, sammenlignet med i dag",
+  "Arbejdsløsheden om et år, sammenlignet med i dag",
+  "Anskaffelse af større forbrugsgoder, inden for de næste 12 mdr",
+  "Anser det som fornuftigt at spare op i den nuværende økonomiske situation",
+  "Regner med at kunne spare op i de kommende 12 måneder",
+  "Familiens økonomiske situation lige nu: kan spare/penge slår til/ bruger mere end man tjener")
+
+  )
+
+#Tilføje kolonnerne og se hvad for en udeladt
+
+final_di_vs_df_spørgsmål <- final_di_vs_df_spørgsmål %>%
+  mutate(DIFTI = c("x","N/A","x","N/A","x","N/A","N/A","N/A","x","N/A","N/A","N/A"))
+
+final_di_vs_df_spørgsmål <- final_di_vs_df_spørgsmål %>% 
+  mutate(FTI = c("x","x","x","x","x","N/A","N/A","N/A","N/A","N/A","N/A","N/A"))
+
+
+#3 spørgsmål udeladt
+#DIFTI: 
+#Udeladt familien om et år, danm om et år, 
+#FTI: 
+#Udeladt: Anskaffele af større forbrugsgode inde for 12 måneder
+
+#familien om et år
+summary(final_df$fam_om_år)
+sd(final_df$fam_om_år)
+#Danmark om et år
+summary(final_df$danm_om_år)
+sd(final_df$danm_om_år)
+#Anskaffelse af større forbrugsgoder inden for 12 måneder
+summary(final_df$ansk_forbrugsgoder_12)
+sd(final_df$ansk_forbrugsgoder_12)
+
+
+final_di_vs_df_spørgsmål <- final_di_vs_df_spørgsmål %>%
+  mutate(Median = c("N/A","12.73","N/A","2.667","N/A","N/A","N/A","N/A","-4.917","N/A","N/A","N/A"))
+
+final_di_vs_df_spørgsmål <- final_di_vs_df_spørgsmål %>% 
+  mutate(Std = c("N/A","5.47","N/A","10.39","N/A","N/A","N/A","N/A","4.13","N/A","N/A","N/A"))
+
+final_di_vs_df_spørgsmål <- final_di_vs_df_spørgsmål %>% 
+  mutate(Skala = c("N/A","5-niveaus skala","N/A","5-niveaus skala","N/A","N/A","N/A","N/A","5-niveaus skala","N/A","N/A","N/A"))
+
+
+
+#Data frame tabel sammenlinging 
+final_2016_v_2023 <- data.frame(
+  DI_FTI = c("0.44","0.47","0.44"))
+
+
+final_2016_v_2023$FTI <-  c("0.32","0.40","0,35")
+final_2016_v_2023$År <- c("2016", "2023","2025")
+final_2016_v_2023$stdDI_FTI <- c("6.47","9.00","8.91")
+final_2016_v_2023$stdFTI <- c("5.67", "8.32","8.54")
+
+
+
+
+#Samle resultater for 2016 v 2013 i en dataframe
+
+final_2016_v_2023 <- data.frame(
+  DI_FTI = c("0.44","0.47"))
+
+
+final_2016_v_2023$FTI <-  c("0.32","0.40")
+final_2016_v_2023$År <- c("2016", "2023")
+final_2016_v_2023$stdDI_FTI <- c("6.47","9.00")
+final_2016_v_2023$stdFTI <- c("5.67", "8,32")
+
+final_2016_v_2023 <- final_2016_v_2023 %>%
+  mutate(År = c("2016","2023")) %>%
+  relocate(År, .before = 1)
+
+  ggplot(final_df_1, aes(x = Kvartal))+
+  geom_col(aes(y = final_df_1$vkst_pc, group = 1), colour = "lightblue")+
+  geom_line(aes(y = final_df_1$DST, group = 1), colour = "red")+
+  geom_line(aes(y = final_df_1$DI, group = 1), colour = "black")+
+  labs(title = "DI’s forbrugertillidsindikator følger årlig realvækst tættere end DST’s indikator", x = "rød = DST, sort = DI")+
+  scale_x_discrete(breaks = final_df_1$Kvartal[seq(1, length(final_df_1$Kvartal), by = 4)]) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
