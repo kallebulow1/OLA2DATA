@@ -1,0 +1,58 @@
+#lineær model fra DST mod privatofbruger
+
+#Predcit dst
+
+#Koeeficient intercept + med forbrugertillidsidkatoren, ganget med -9.7
+
+lmtestdst1 <- lm(vkst_pc ~ DST, data = final_df_1)
+summary(lmtestdst1)
+
+predit_manualDST <- 1.2+0.19*-17.2
+predict_manual2 <- 1.0 +0.04*-9.7
+
+new_dst1 <- data.frame(DST = -17.2)
+
+prediction_dst <- predict(lmtestdst1, new_dst1, interval = "prediction")
+print(prediction_dst)
+
+
+#andet forsøg
+# Model kun på historiske rækker
+lmtestDST1 <- lm(vkstp_pct ~ Forbrugertillid, 
+               data = final_df[!is.na(final_df$vkstp_pct), ])
+
+summary(lmtestDST1)
+
+
+# Nyt input til forecast
+new_dst <- data.frame(Forbrugertillid = -9.7)
+
+# Forudsigelse
+prediction1 <- predict(lmtestDST1, newdata = new_dst)
+
+predcition2 <- predict(lmtestDST1, newdata = new_dst, interval = "prediction")
+print(predcition2)
+
+
+#Pedict DI
+
+#Historisk data
+df_di <- subset(final_df, !is.na(vkstp_pct) & !is.na(sammenlagt))
+
+m_di1 <- lm(vkst_pc ~ DI, data = final_df_1)
+summary(m_di1)
+
+
+
+# Nyt input til forecast
+new_di3 <- data.frame(DI = -16.5)
+
+# Forudsigelse
+
+predcition4_di <- predict(m_di1, newdata = new_di3, interval = "prediction")
+
+print(predcition4_di)
+
+#Mnaual beregning
+
+manual_di <- (2.15 + 0.21)* -16.5
