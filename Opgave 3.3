@@ -1,0 +1,28 @@
+## 4) Nøgletal (slide 7 pp Torsdag uge 5)
+metrics <- function(cm){
+  TN <- cm["0","0"]; FP <- cm["1","0"]; FN <- cm["0","1"]; TP <- cm["1","1"]
+  acc  <- (TP + TN) / sum(cm)
+  sens <- TP / (TP + FN)
+  spec <- TN / (TN + FP)
+  c(Accuracy = acc, Sensitivity = sens, Specificity = spec)
+}
+metrics(cm_DST) # Accuracy Sensitivity Specificity <-  0.8039216   0.9480519   0.3600000 
+metrics(cm_DI) # Accuracy Sensitivity Specificity <- 0.8431373   0.9480519   0.5200000 
+
+# Hvor ofte modellen siger "op" (1)
+mean(pred_DST_dir == 1) # = 0.872549
+mean(pred_DI_dir == 1) # = 0.8333333
+
+# Hvor ofte der faktisk er "op" i data
+mean(ny_data$Direction == 1) # = 0.754902
+
+# Hvor mange gange er der match mellem model og faktisk "op"
+mean(pred_DST_dir == 1 & ny_data$Direction == 1) # = 0.7156863 
+mean(pred_DI_dir == 1 & ny_data$Direction == 1) # = 0.7156863
+
+ny_data_Dir <- as.integer(ny_data$Direction > 0.5)
+
+# Forudsigelse af YoYK3
+newdata_q3_2025 <- data.frame(DI_FTI = -16.5)
+# Beregn sandsynligheden for "op"
+predict(mod_DI_log, newdata = newdata_q3_2025, type = "response")
