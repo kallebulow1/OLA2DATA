@@ -26,3 +26,37 @@ ny_data_Dir <- as.integer(ny_data$Direction > 0.5)
 newdata_q3_2025 <- data.frame(DI_FTI = -16.5)
 # Beregn sandsynligheden for "op"
 predict(mod_DI_log, newdata = newdata_q3_2025, type = "response")
+
+###### NY OPDATERET 
+
+# 3.3 – Simpel validering af model
+
+# Formål: Hvor ofte siger modellen “op”, hvor ofte er der faktisk “op”, og hvor ofte rammer den 1 & 1? Samt nøgletal.
+
+# Sandsynligheder og 0/1-klassifikation (cut=0.5)
+p_DI  <- predict(mod_DI_log, newdata = ny_data, type = "response")
+pred_DI_dir <- as.integer(p_DI >= 0.5)
+
+# Confusion matrix + nøgletal
+cm_DI <- table(Predicted = pred_DI_dir, Actual = ny_data$Direction)
+
+metrics <- function(cm){
+  TN <- cm["0","0"]; FP <- cm["1","0"]; FN <- cm["0","1"]; TP <- cm["1","1"]
+  acc <- (TP+TN)/sum(cm); sens <- TP/(TP+FN); spec <- TN/(TN+FP)
+  c(Accuracy=acc, Sensitivity=sens, Specificity=spec)
+}
+cm_DI
+metrics(cm_DI)
+
+# Andele til teksten
+andel_model_siger_op <- mean(pred_DI_dir==1)
+andel_faktisk_op     <- mean(ny_data$Direction==1)
+andel_match_1_1      <- mean(pred_DI_dir==1 & ny_data$Direction==1)
+
+#Rapportér (med dine tal):
+	#•	Model siger “op”: ~83 % (DI) / ~87 % (DST).
+	#•	Faktisk “op”: ~75 %.
+	#•	Match “1 & 1”: ~72 %.
+	#•	Nøgletal (fx DI: Accuracy ~0.84, Sensitivity ~0.95, Specificity ~0.52).
+
+#Kort konklusion: “Modellen er bias mod vækst (høj sensitivitet, lav specificitet) og slår knapt baseline ‘altid op’.”
