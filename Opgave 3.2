@@ -34,3 +34,27 @@ pred_DI_dir <- as.integer(p_DI > 0.5)
 cm_DST <- table(Predicted = pred_DST_dir, Actual = ny_data$Direction)
 cm_DI  <- table(Predicted = pred_DI_dir,  Actual = ny_data$Direction)
 cm_DST; cm_DI
+
+######## NY OPDATERET 
+
+#3.2 – Logistisk regression og forudsigelse
+
+#Formål: Brug DI’s samlede indeks (DI_FTI) som forklarende variabel til at forudsige retning i et givent kvartal (fx 2024K3 eller 2025K3).
+
+ny_data <- data.frame(DI_FTI = df_q$DI_forbrugertillid,
+                      DST_FTI = df_q$Forbrugertillidsindikatoren,
+                      Direction = df_q$direction)
+
+# Logistisk model (DI)
+mod_DI_log <- glm(Direction ~ DI_FTI, data = ny_data, family = binomial)
+
+# Sandsynlighed for “op” i det ønskede kvartal (indsæt DI_FTI-værdi)
+newdata_q <- data.frame(DI_FTI = -16.5)  # eksempel
+p_q <- predict(mod_DI_log, newdata = newdata_q, type = "response")
+p_q
+# Beslutning v. cutoff 0.5
+ifelse(p_q >= 0.5, "Op", "Ned")
+
+# Rapportér: sandsynligheden (fx 0.27) og afgør op/ned ved 0.5.
+# Kort konklusion: “Modellen for DI estimerer p(op)=XX; da det er < / ≥ 0.5, forudsiges ned/op i kvartalet.”
+
