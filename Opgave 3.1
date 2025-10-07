@@ -2,3 +2,20 @@ op_ned <- ifelse(df_q$P31_yoy > 0,1,0)
 df_q$direction <- as.factor(op_ned)
 table(ny_data$Direction)
 prop.table(table(ny_data$Direction))
+
+#####NY OPDATERET 
+
+#3.1 – Feature engineering (dummy)
+
+#Formål: Lav en 0/1-variabel for retningen i den kvartalsvise årlige vækst (P31_yoy).
+
+#Dummy (1 = stigning, 0 = fald)
+op_ned <- ifelse(df_q$P31_yoy > 0, 1, 0)
+df_q$direction <- factor(op_ned, levels=c(0,1))
+
+#Hvor ofte 0/1
+table(df_q$direction)
+prop.table(table(df_q$direction))
+
+# Rapportér: andel stigninger (~75%) og fald (~25%) i perioden (din faktiske output).
+# Kort konklusion: “Forbruget er stigende i ca. 75 % af kvartalerne; dummy’en danner respons til logistisk regression.”
