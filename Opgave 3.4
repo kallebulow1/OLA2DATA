@@ -33,3 +33,66 @@ save.image("mitprojekt_predict.Rdata")
 
 coords(roc_DI, "best", ret = c("threshold", "sensitivity", "specificity"))
 coords(roc_DST, "best", ret = c("threshold", "sensitivity", "specificity"))
+
+
+####################### NY OPDATERET ###################################
+
+#3.4 – Forbedringer (ROC + cutoff + scenarieidé)
+
+#Formål: Forbedre balancen (sens/spec) og demonstrér forbedring.
+
+library(pROC)
+
+# ROC og AUC
+roc_DI  <- roc(ny_data$Direction, p_DI, levels=c("0","1"))
+auc(roc_DI)
+
+# Bedste cutoff (Youden’s J)
+best_DI <- coords(roc_DI, "best", ret=c("threshold","sensitivity","specificity"))
+best_DI  # fx threshold ≈ 0.57
+
+# Klassifikation med nyt cutoff
+thr_DI <- as.numeric(best_DI["threshold"])
+pred_DI_thr <- as.integer(p_DI >= thr_DI)
+cm_DI_thr <- table(Predicted = pred_DI_thr, Actual = ny_data$Direction)
+metrics(cm_DI_thr)
+
+# (Valgfrit) Sammenlign med DST på samme måde:
+mod_DST_log <- glm(Direction ~ DST_FTI, data = ny_data, family = binomial)
+p_DST  <- predict(mod_DST_log, newdata=ny_data, type="response")
+roc_DST <- roc(ny_data$Direction, p_DST, levels=c("0","1"))
+best_DST <- coords(roc_DST, "best", ret=c("threshold","sensitivity","specificity"))
+
+#Rapportér:
+	#•	AUC(DI) og AUC(DST) (DI > DST i din grafik).
+	#•	Nyt cutoff (DI ≈ 0.57; DST ≈ 0.78) og hvordan metrics ændres: specificity stiger, sensitivity falder en smule → bedre balance.
+	#•	(Valgfrit) 2 scenarier: øg/sænk DI-underspørgsmål med ±1 SD og vis ændring i p(op).
+
+#Kort konklusion: “ROC-baseret cutoff forbedrer balancen; DI-modellen har bedre prædiktiv evne (AUC) end DST og er at foretrække.”
+
+####PLOT
+
+# ROC-sammenligning (3.4):
+plot(roc_DI,  col="blue", lwd=2, main="ROC-kurver: DI vs. DST")
+plot(roc_DST, col="red",  lwd=2, add=TRUE)
+abline(a=0,b=1,lty=2,col="gray")
+legend("bottomright",
+       legend=c(paste0("DI (AUC=", round(auc(roc_DI),3),")"),
+                paste0("DST (AUC=", round(auc(roc_DST),3),")")),
+       col=c("blue","red"), lwd=2)
+
+# Heatmap-confusion (3.3/3.4 slides):
+
+cm_to_plot <- function(cm, title){
+  df <- as.data.frame(as.table(cm))
+  ggplot(df, aes(Actual, Predicted, fill=Freq)) +
+    geom_tile(color="white") +
+    geom_text(aes(label=Freq), color="white", size=6, fontface="bold") +
+    scale_fill_gradient(low="steelblue", high="darkblue") +
+    labs(title=title, x="Faktisk", y="Forudsagt", fill="Antal") +
+    theme_minimal(base_size=14) +
+    theme(plot.title=element_text(hjust=0.5, face="bold"))
+}
+cm_to_plot(cm_DI,  "Confusion Matrix – DI (cut=0.5)")
+cm_to_plot(cm_DI_thr, "Confusion Matrix – DI (cut=best)")
+
