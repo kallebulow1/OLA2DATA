@@ -203,3 +203,47 @@ final_2016_v_2023 <- final_2016_v_2023 %>%
     legend.position = "bottom",
     legend.title    = element_text(face = "bold")
   )
+
+
+  mere simple kode
+
+
+  # Gør datasættet 'langt' for enklere plot
+plot_df <- final_df_1 %>%
+  pivot_longer(cols = c(DST, DI), names_to = "Indikator", values_to = "Værdi")
+
+# Plot
+ggplot(plot_df, aes(x = Kvartal)) +
+  # søjler: årlig realvækst
+  geom_col(aes(y = vkst_pc), fill = "lightblue", alpha = 0.6) +
+  
+  # linjer: DST og DI
+  geom_line(aes(y = Værdi, colour = Indikator), size = 1.1) +
+  
+  # nul-linje
+  geom_hline(yintercept = 0, colour = "grey60", linetype = "dashed") +
+  
+  # labels
+  labs(
+    title   = "Forbrugertillid peger fremad: DI følger realvæksten tættest",
+    x       = "Kvartal",
+    y       = "Årlig realvækst i privatforbrug (%)",
+    colour  = "Indikator",
+    caption = "Kilde: Danmarks Statistik, Dansk Industri og egne beregninger"
+  ) +
+  
+  # farver
+  scale_colour_manual(values = c("DST" = "#e41a1c", "DI" = "#000000")) +
+  
+  # vis kun hvert 8. kvartal på x-aksen
+  scale_x_discrete(breaks = final_df_1$Kvartal[seq(1, nrow(final_df_1), by = 8)]) +
+  
+  # tema
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title      = element_text(face = "bold", size = 16),
+    axis.text.x     = element_text(angle = 45, hjust = 1),
+    legend.position = "bottom",
+    legend.title    = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
